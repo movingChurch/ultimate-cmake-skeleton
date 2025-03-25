@@ -4,6 +4,6 @@
 
 namespace ultimate_cmake_template::utils {
 void print(const std::string &message) {
-  std::cout << "[Common] " << message << std::endl;
+  std::cout << "[MSVC] " << message << std::endl;
 }
 }  // namespace ultimate_cmake_template::utils

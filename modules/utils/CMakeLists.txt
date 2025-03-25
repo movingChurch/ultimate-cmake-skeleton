@@ -2,7 +2,11 @@ cmake_minimum_required(VERSION ${CMAKE_VERSION_MINIMUM})
 
 get_filename_component(MODULE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
-set(MODULE_SOURCES src/print.cpp)
+if(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
+  set(MODULE_SOURCES src/msvc/print.cpp)
+else()
+  set(MODULE_SOURCES src/print.cpp)
+endif()
 
 add_library(${MODULE_NAME} STATIC ${MODULE_SOURCES})
 
