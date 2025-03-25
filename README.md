@@ -1,0 +1,1 @@
+# ultimate-cmake-skeleton
