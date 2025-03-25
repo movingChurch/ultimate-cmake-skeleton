@@ -1,6 +1,6 @@
-#include <iostream>
+#include "utils/print.hpp"
 
 auto main() -> int32_t {
-  std::cout << "Goodbye, World!" << std::endl;
+  ultimate_cmake_template::utils::print("Goodbye, World!");
   return 0;
 }
