@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION ${CMAKE_VERSION_MINIMUM})
 
 # Project Configurations
 project(
-  ultimate_cmake_template
+  ULTIMATE_CMAKE_TEMPLATE
   VERSION 0.1.0
   LANGUAGES CXX
   DESCRIPTION "A repo for modular CMake template"
@@ -19,6 +19,7 @@ set(${PROJECT_NAME}_BUILD_PATH ${CMAKE_CURRENT_BINARY_DIR}/build)
 set(${PROJECT_NAME}_INSTALL_PATH ${CMAKE_CURRENT_BINARY_DIR}/install)
 set(${PROJECT_NAME}_LIBRARY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libraries)
 set(${PROJECT_NAME}_APPLICATION_PATH ${CMAKE_CURRENT_SOURCE_DIR}/applications)
+set(${PROJECT_NAME}_EXTERNAL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/externals)
 
 # Compiler Flags
 set(COMPILER_FLAGS_FOR_MSVC /W4 /WX /permissive-)
@@ -64,7 +65,14 @@ message(STATUS "Root: ${${PROJECT_NAME}_ROOT_PATH}")
 message(STATUS "Build: ${${PROJECT_NAME}_BUILD_PATH}")
 message(STATUS "Install: ${${PROJECT_NAME}_INSTALL_PATH}")
 message(STATUS "Application: ${${PROJECT_NAME}_APPLICATION_PATH}")
+message(STATUS "Library: ${${PROJECT_NAME}_LIBRARY_PATH}")
+message(STATUS "External: ${${PROJECT_NAME}_EXTERNAL_PATH}")
 
+message(STATUS)
+
+message(STATUS "Started External Configuration")
+add_subdirectory(${${PROJECT_NAME}_EXTERNAL_PATH})
+message(STATUS "Finished External Configuration")
 message(STATUS)
 message(STATUS "Started Library Configuration")
 add_subdirectory(${${PROJECT_NAME}_LIBRARY_PATH})
