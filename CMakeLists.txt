@@ -5,7 +5,7 @@ project(
   UltimateCMakeTemplate
   VERSION 0.0.1
   LANGUAGES CXX
-  DESCRIPTION "A repo for modular project with CMake lecture"
+  DESCRIPTION "A repo for modular CMake template"
   HOMEPAGE_URL "https://github.com/movingChurch/ultimate-cmake-skeleton"
 )
 
