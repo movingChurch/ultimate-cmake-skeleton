@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 3.15)
+
+file(GLOB SUB_DIRECTORIES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/*")
+
+foreach(SUB_DIRECTORY ${SUB_DIRECTORIES})
+  if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${SUB_DIRECTORY})
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${SUB_DIRECTORY}/CMakeLists.txt)
+      message(STATUS "Started configuration for ${SUB_DIRECTORY}.")
+      add_subdirectory(${SUB_DIRECTORY})
+      message(STATUS "Finished configuration for ${SUB_DIRECTORY}.")
+    endif()
+  endif()
+endforeach()
