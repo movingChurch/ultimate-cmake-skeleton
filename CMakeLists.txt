@@ -17,8 +17,9 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(${PROJECT_NAME}_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 set(${PROJECT_NAME}_BUILD_PATH ${CMAKE_CURRENT_BINARY_DIR}/build)
 set(${PROJECT_NAME}_INSTALL_PATH ${CMAKE_CURRENT_BINARY_DIR}/install)
-set(${PROJECT_NAME}_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/modules)
+set(${PROJECT_NAME}_LIBRARY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libraries)
 set(${PROJECT_NAME}_APPLICATION_PATH ${CMAKE_CURRENT_SOURCE_DIR}/applications)
+
 # Compiler Flags
 set(COMPILER_FLAGS_FOR_MSVC /W4 /WX /permissive-)
 set(COMPILER_FLAGS_FOR_GCC -Wall -Wpedantic -Wextra -Werror)
@@ -65,9 +66,9 @@ message(STATUS "Install: ${${PROJECT_NAME}_INSTALL_PATH}")
 message(STATUS "Application: ${${PROJECT_NAME}_APPLICATION_PATH}")
 
 message(STATUS)
-message(STATUS "Started Module Configuration")
-add_subdirectory(${${PROJECT_NAME}_MODULE_PATH})
-message(STATUS "Finished Module Configuration")
+message(STATUS "Started Library Configuration")
+add_subdirectory(${${PROJECT_NAME}_LIBRARY_PATH})
+message(STATUS "Finished Library Configuration")
 
 message(STATUS)
 message(STATUS "Started Application Configuration")
