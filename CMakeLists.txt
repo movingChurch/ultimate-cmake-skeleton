@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 
 # Project Configurations
 project(
-  UltimateCMakeTemplate
+  ultimate_cmake_template
   VERSION 0.0.1
   LANGUAGES CXX
   DESCRIPTION "A repo for modular CMake template"
