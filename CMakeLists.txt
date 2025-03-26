@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION ${CMAKE_VERSION_MINIMUM})
 
 # Project Configurations
 project(
-  ULTIMATE_CMAKE_TEMPLATE
+  ultimate_cmake_template
   VERSION 0.1.0
   LANGUAGES CXX
   DESCRIPTION "A repo for modular CMake template"
@@ -15,6 +15,8 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # Project Paths
 set(${PROJECT_NAME}_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+set(${PROJECT_NAME}_SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/source)
+set(${PROJECT_NAME}_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(${PROJECT_NAME}_BUILD_PATH ${CMAKE_CURRENT_BINARY_DIR}/build)
 set(${PROJECT_NAME}_INSTALL_PATH ${CMAKE_CURRENT_BINARY_DIR}/install)
 set(${PROJECT_NAME}_LIBRARY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libraries)
@@ -70,18 +72,33 @@ message(STATUS "External: ${${PROJECT_NAME}_EXTERNAL_PATH}")
 
 message(STATUS)
 
-message(STATUS "Started External Configuration")
-add_subdirectory(${${PROJECT_NAME}_EXTERNAL_PATH})
-message(STATUS "Finished External Configuration")
-message(STATUS)
-message(STATUS "Started Library Configuration")
-add_subdirectory(${${PROJECT_NAME}_LIBRARY_PATH})
-message(STATUS "Finished Library Configuration")
+if(EXISTS ${${PROJECT_NAME}_EXTERNAL_PATH}/CMakeLists.txt)
+  message(STATUS)
+  message(STATUS "Started External Configuration")
+  add_subdirectory(${${PROJECT_NAME}_EXTERNAL_PATH})
+  message(STATUS "Finished External Configuration")
+endif()
 
-message(STATUS)
-message(STATUS "Started Application Configuration")
-add_subdirectory(${${PROJECT_NAME}_APPLICATION_PATH})
-message(STATUS "Finished Application Configuration")
+if(EXISTS ${${PROJECT_NAME}_LIBRARY_PATH}/CMakeLists.txt)
+  message(STATUS)
+  message(STATUS "Started Library Configuration")
+  add_subdirectory(${${PROJECT_NAME}_LIBRARY_PATH})
+  message(STATUS "Finished Library Configuration")
+endif()
+
+if(EXISTS ${${PROJECT_NAME}_APPLICATION_PATH}/CMakeLists.txt)
+  message(STATUS)
+  message(STATUS "Started Application Configuration")
+  add_subdirectory(${${PROJECT_NAME}_APPLICATION_PATH})
+  message(STATUS "Finished Application Configuration")
+endif()
+
+if(EXISTS ${${PROJECT_NAME}_TEST_PATH}/CMakeLists.txt)
+  message(STATUS)
+  message(STATUS "Started Test Configuration")
+  add_subdirectory(${${PROJECT_NAME}_TEST_PATH})
+  message(STATUS "Finished Test Configuration")
+endif()
 
 message(STATUS)
 message(STATUS "Finished all process in ${PROJECT_NAME} CMakeLists.txt.")

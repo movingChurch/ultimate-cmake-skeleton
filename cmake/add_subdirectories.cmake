@@ -1,0 +1,13 @@
+function(add_subdirectories DIRECTORY_PATH)
+  file(GLOB SUB_DIRECTORIES RELATIVE ${DIRECTORY_PATH} "${DIRECTORY_PATH}/*")
+
+  foreach(SUB_DIRECTORY ${SUB_DIRECTORIES})
+    if(IS_DIRECTORY ${DIRECTORY_PATH}/${SUB_DIRECTORY})
+      if(EXISTS ${DIRECTORY_PATH}/${SUB_DIRECTORY}/CMakeLists.txt)
+        message(STATUS "Started configuration for ${SUB_DIRECTORY}.")
+        add_subdirectory(${SUB_DIRECTORY})
+        message(STATUS "Finished configuration for ${SUB_DIRECTORY}.")
+      endif()
+    endif()
+  endforeach()
+endfunction()

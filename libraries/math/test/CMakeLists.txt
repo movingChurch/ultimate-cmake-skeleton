@@ -7,7 +7,7 @@ function(create_test_target NAME SOURCES)
   target_compile_options(${NAME} PRIVATE ${COMPILER_FLAGS})
 
   target_link_libraries(${NAME}
-    PRIVATE gtest gtest_main math
+    PRIVATE gtest gtest_main ${PROJECT_NAME}
   )
 endfunction()
 
@@ -21,14 +21,14 @@ foreach(TEST_TYPE ${TEST_TYPES})
 
     foreach(TEST_FILE ${TEST_FILES})
       get_filename_component(TEST_NAME ${TEST_FILE} NAME_WE)
-      create_test_target("${TEST_TYPE}__${TEST_NAME}" ${TEST_FILE})
+      create_test_target(${PROJECT_NAME}__${TEST_TYPE}__${TEST_NAME} ${TEST_FILE})
 
       list(APPEND ${TEST_TYPE}_TEST_FILES ${TEST_FILE})
       list(APPEND ALL_TEST_FILES ${TEST_FILE})
     endforeach()
 
-    create_test_target("${TEST_TYPE}__all_tests" "${${TEST_TYPE}_TEST_FILES}")
+    create_test_target(${PROJECT_NAME}__${TEST_TYPE}__all_tests "${${TEST_TYPE}_TEST_FILES}")
   endif()
 endforeach()
 
-create_test_target("all_tests" "${ALL_TEST_FILES}")
+create_test_target(${PROJECT_NAME}__all_tests "${ALL_TEST_FILES}")

@@ -34,4 +34,4 @@
 /build
 .vscode
 .cache
-/externals/install
+/install
