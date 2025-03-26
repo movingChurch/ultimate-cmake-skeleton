@@ -19,9 +19,29 @@ EXCLUDED_DIRECTORIES=(
   "install"
 )
 
-FORMATTED_FILES_COUNT=0
-ERROR_COUNT=0
-ERROR_FILES=()
+# Counter files
+COUNTER_DIR="/tmp/format_counters"
+mkdir -p "${COUNTER_DIR}"
+TOTAL_COUNT_FILE="${COUNTER_DIR}/total"
+FORMAT_COUNT_FILE="${COUNTER_DIR}/formatted"
+CHANGE_COUNT_FILE="${COUNTER_DIR}/changed"
+ERROR_COUNT_FILE="${COUNTER_DIR}/errors"
+CHANGED_FILES_LIST="${COUNTER_DIR}/changed_files"
+ERROR_FILES_LIST="${COUNTER_DIR}/error_files"
+
+# Initialize counters
+echo 0 >"${TOTAL_COUNT_FILE}"
+echo 0 >"${FORMAT_COUNT_FILE}"
+echo 0 >"${CHANGE_COUNT_FILE}"
+echo 0 >"${ERROR_COUNT_FILE}"
+>"${CHANGED_FILES_LIST}"
+>"${ERROR_FILES_LIST}"
+
+function increment_counter() {
+  local counter_file="$1"
+  local current_value=$(cat "${counter_file}")
+  echo $((current_value + 1)) >"${counter_file}"
+}
 
 function print_section_header() {
   echo "====================================="
@@ -49,61 +69,95 @@ function format_source_files() {
     ! -path "*/build/*" \
     ! -path "*/install/*" \
     -print0 | while IFS= read -r -d '' SOURCE_FILE; do
-    echo "Formatting: ${SOURCE_FILE#${PROJECT_ROOT_DIRECTORY}/}"
-    if ! clang-format -i -style=file "${SOURCE_FILE}" 2>/tmp/format_error; then
-      ERROR_COUNT=$((ERROR_COUNT + 1))
-      ERROR_FILES+=("${SOURCE_FILE}")
-      echo "Error formatting ${SOURCE_FILE}:"
-      cat /tmp/format_error
+
+    increment_counter "${TOTAL_COUNT_FILE}"
+    echo "[CHECK] ${SOURCE_FILE#${PROJECT_ROOT_DIRECTORY}/}"
+
+    if ! clang-format --dry-run -Werror -style=file "${SOURCE_FILE}" &>/dev/null; then
+      echo "[FORMATTING] ${SOURCE_FILE#${PROJECT_ROOT_DIRECTORY}/}"
+      echo "${SOURCE_FILE}" >>"${CHANGED_FILES_LIST}"
+      increment_counter "${CHANGE_COUNT_FILE}"
+
+      if ! clang-format -i -style=file "${SOURCE_FILE}" 2>/tmp/format_error; then
+        increment_counter "${ERROR_COUNT_FILE}"
+        echo "${SOURCE_FILE}" >>"${ERROR_FILES_LIST}"
+        echo "[ERROR] Failed to format: ${SOURCE_FILE#${PROJECT_ROOT_DIRECTORY}/}"
+        cat /tmp/format_error
+      else
+        increment_counter "${FORMAT_COUNT_FILE}"
+        echo "[SUCCESS] Formatted: ${SOURCE_FILE#${PROJECT_ROOT_DIRECTORY}/}"
+      fi
     else
-      FORMATTED_FILES_COUNT=$((FORMATTED_FILES_COUNT + 1))
+      echo "[SKIP] Already formatted: ${SOURCE_FILE#${PROJECT_ROOT_DIRECTORY}/}"
     fi
   done
 }
 
-function check_formatting_changes() {
-  if git diff --quiet; then
-    echo "No formatting changes were necessary."
-  else
-    echo "Formatting changes have been applied."
+function print_formatting_summary() {
+  local TOTAL_FILES=$(cat "${TOTAL_COUNT_FILE}")
+  local CHANGED_FILES=$(cat "${CHANGE_COUNT_FILE}")
+  local FORMATTED_FILES=$(cat "${FORMAT_COUNT_FILE}")
+
+  echo "Formatting Results:"
+  echo "-------------------"
+  echo "Total files scanned: ${TOTAL_FILES}"
+  echo "Files requiring formatting: ${CHANGED_FILES}"
+  echo "Successfully formatted files: ${FORMATTED_FILES}"
+
+  if [ ${CHANGED_FILES} -gt 0 ]; then
+    echo ""
     echo "Modified files:"
-    git diff --name-only
+    while IFS= read -r file; do
+      echo "- ${file#${PROJECT_ROOT_DIRECTORY}/}"
+    done <"${CHANGED_FILES_LIST}"
   fi
 }
 
 function print_error_summary() {
+  local ERROR_COUNT=$(cat "${ERROR_COUNT_FILE}")
+
   if [ ${ERROR_COUNT} -gt 0 ]; then
-    echo "====================================="
-    echo "ERROR SUMMARY"
-    echo "====================================="
+    echo ""
+    echo "Error Summary:"
+    echo "-------------"
     echo "Failed to format ${ERROR_COUNT} files:"
-    for error_file in "${ERROR_FILES[@]}"; do
-      echo "- ${error_file#${PROJECT_ROOT_DIRECTORY}/}"
-    done
+    while IFS= read -r file; do
+      echo "- ${file#${PROJECT_ROOT_DIRECTORY}/}"
+    done <"${ERROR_FILES_LIST}"
     return 1
   fi
   return 0
 }
 
+function cleanup() {
+  rm -rf "${COUNTER_DIR}"
+}
+
+function error_handler() {
+  echo "Script failed! See error messages above."
+  cleanup
+  exit 1
+}
+
+trap error_handler INT TERM EXIT
+
 function main() {
   print_section_header "Starting Code Formatting"
-
   check_clang_format_installation
-
   echo "Project root directory: ${PROJECT_ROOT_DIRECTORY}"
+  echo ""
 
   for FILE_EXTENSION in "${SOURCE_FILE_EXTENSIONS[@]}"; do
     format_source_files "${FILE_EXTENSION}"
   done
 
   print_section_header "Formatting Complete"
-  echo "Total files processed successfully: ${FORMATTED_FILES_COUNT}"
-
-  check_formatting_changes
+  print_formatting_summary
   print_error_summary
-}
+  cleanup
 
-trap 'echo "Script failed! See error messages above."; exit 1' ERR
+  trap - INT TERM EXIT
+}
 
 main
 exit_code=$?
