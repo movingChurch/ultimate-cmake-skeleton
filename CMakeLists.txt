@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION ${CMAKE_VERSION_MINIMUM})
 # Project Configurations
 project(
   ultimate_cmake_template
-  VERSION 0.1.0
+  VERSION 1.0.0
   DESCRIPTION "A repo for modular CMake template"
   HOMEPAGE_URL "https://github.com/movingChurch/ultimate-cmake-skeleton"
 )
