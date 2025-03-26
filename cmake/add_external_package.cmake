@@ -12,18 +12,20 @@ function(set_package_directories PACKAGE_NAME MODULE_NAME)
 endfunction()
 
 function(configure_library LIBRARY MODULE_NAME)
-  add_library(${LIBRARY} STATIC IMPORTED GLOBAL)
+  if(NOT TARGET ${LIBRARY})
+    add_library(${LIBRARY} STATIC IMPORTED GLOBAL)
 
-  if(WIN32)
-    set(LIBRARY_FILENAME "${LIBRARY}.lib")
-  else()
-    set(LIBRARY_FILENAME "lib${LIBRARY}.a")
+    if(WIN32)
+      set(LIBRARY_FILENAME "${LIBRARY}.lib")
+    else()
+      set(LIBRARY_FILENAME "lib${LIBRARY}.a")
+    endif()
+
+    set_target_properties(${LIBRARY} PROPERTIES
+      IMPORTED_LOCATION "${${MODULE_NAME}_INSTALL_DIRECTORY}/lib/${LIBRARY_FILENAME}"
+      INTERFACE_INCLUDE_DIRECTORIES "${${MODULE_NAME}_INSTALL_DIRECTORY}/include"
+    )
   endif()
-
-  set_target_properties(${LIBRARY} PROPERTIES
-    IMPORTED_LOCATION "${${MODULE_NAME}_INSTALL_DIRECTORY}/lib/${LIBRARY_FILENAME}"
-    INTERFACE_INCLUDE_DIRECTORIES "${${MODULE_NAME}_INSTALL_DIRECTORY}/include"
-  )
 endfunction()
 
 function(add_external_package)
@@ -43,24 +45,75 @@ function(add_external_package)
   cmake_parse_arguments(PACKAGE "" "${one_value_arguments}" "${multi_value_arguments}" ${ARGN})
 
   generate_module_name(${PACKAGE_NAME} MODULE_NAME)
-
   set_package_directories(${PACKAGE_NAME} ${MODULE_NAME})
 
-  include(ExternalProject)
-  ExternalProject_Add(
-    ${MODULE_NAME}_EXTERNAL
-    GIT_REPOSITORY ${PACKAGE_REPOSITORY_URL}
-    GIT_TAG ${PACKAGE_REPOSITORY_TAG}
-    GIT_SHALLOW TRUE
-    CMAKE_ARGS
-    -DCMAKE_INSTALL_PREFIX=${${MODULE_NAME}_INSTALL_DIRECTORY}
-    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-    ${PACKAGE_COMPILE_ARGUMENTS}
-    SOURCE_DIR ${${MODULE_NAME}_SOURCE_DIRECTORY}
-    BINARY_DIR ${${MODULE_NAME}_BUILD_DIRECTORY}
-    INSTALL_DIR ${${MODULE_NAME}_INSTALL_DIRECTORY}
-    TEST_COMMAND ""
-  )
+  # 모든 필요한 라이브러리 파일이 존재하는지 확인
+  set(ALL_LIBS_EXIST TRUE)
+
+  foreach(LIBRARY ${PACKAGE_LIBRARIES})
+    if(WIN32)
+      set(LIB_FILE "${${MODULE_NAME}_INSTALL_DIRECTORY}/lib/${LIBRARY}.lib")
+    else()
+      set(LIB_FILE "${${MODULE_NAME}_INSTALL_DIRECTORY}/lib/lib${LIBRARY}.a")
+    endif()
+
+    if(NOT EXISTS ${LIB_FILE})
+      set(ALL_LIBS_EXIST FALSE)
+      break()
+    endif()
+  endforeach()
+
+  # 라이브러리가 이미 존재하면 설치 과정 건너뛰기
+  if(NOT ALL_LIBS_EXIST)
+    include(FetchContent)
+
+    FetchContent_Declare(
+      ${MODULE_NAME}
+      GIT_REPOSITORY ${PACKAGE_REPOSITORY_URL}
+      GIT_TAG ${PACKAGE_REPOSITORY_TAG}
+      GIT_SHALLOW TRUE
+      SOURCE_DIR ${${MODULE_NAME}_SOURCE_DIRECTORY}
+      BINARY_DIR ${${MODULE_NAME}_BUILD_DIRECTORY}
+    )
+
+    FetchContent_GetProperties(${MODULE_NAME})
+
+    if(NOT ${MODULE_NAME}_POPULATED)
+      message(STATUS "Installing ${PACKAGE_NAME}...")
+      FetchContent_Populate(${MODULE_NAME})
+
+      # Add the subdirectory with the compile arguments
+      set(CMAKE_INSTALL_PREFIX ${${MODULE_NAME}_INSTALL_DIRECTORY})
+      add_subdirectory(
+        ${${MODULE_NAME}_SOURCE_DIRECTORY}
+        ${${MODULE_NAME}_BUILD_DIRECTORY}
+      )
+
+      # Install 명령 추가
+      install(CODE "
+        execute_process(
+          COMMAND ${CMAKE_COMMAND} --build . --target install
+          WORKING_DIRECTORY ${${MODULE_NAME}_BUILD_DIRECTORY}
+        )"
+      )
+
+      # Configuration 단계에서 즉시 install 실행
+      execute_process(
+        COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=${${MODULE_NAME}_INSTALL_DIRECTORY}
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        ${PACKAGE_COMPILE_ARGUMENTS}
+        ${${MODULE_NAME}_SOURCE_DIRECTORY}
+        WORKING_DIRECTORY ${${MODULE_NAME}_BUILD_DIRECTORY}
+      )
+      execute_process(
+        COMMAND ${CMAKE_COMMAND} --build . --target install
+        WORKING_DIRECTORY ${${MODULE_NAME}_BUILD_DIRECTORY}
+      )
+      message(STATUS "Finished installing ${PACKAGE_NAME}")
+    endif()
+  else()
+    message(STATUS "Found existing installation for ${PACKAGE_NAME}, skipping build")
+  endif()
 
   foreach(LIBRARY ${PACKAGE_LIBRARIES})
     configure_library(${LIBRARY} ${MODULE_NAME})
