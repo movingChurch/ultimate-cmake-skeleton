@@ -25,6 +25,7 @@ set(${UPPERCASE_PROJECT_NAME}_INSTALL_PATH ${CMAKE_CURRENT_BINARY_DIR}/install)
 set(${UPPERCASE_PROJECT_NAME}_LIBRARY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libraries)
 set(${UPPERCASE_PROJECT_NAME}_APPLICATION_PATH ${CMAKE_CURRENT_SOURCE_DIR}/applications)
 set(${UPPERCASE_PROJECT_NAME}_EXTERNAL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/externals)
+set(${UPPERCASE_PROJECT_NAME}_SCRIPT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/scripts)
 
 # Compiler Flags
 set(COMPILER_FLAGS_FOR_MSVC /W4 /WX /permissive-)
@@ -71,7 +72,7 @@ message(STATUS "Install: ${${UPPERCASE_PROJECT_NAME}_INSTALL_PATH}")
 message(STATUS "Application: ${${UPPERCASE_PROJECT_NAME}_APPLICATION_PATH}")
 message(STATUS "Library: ${${UPPERCASE_PROJECT_NAME}_LIBRARY_PATH}")
 message(STATUS "External: ${${UPPERCASE_PROJECT_NAME}_EXTERNAL_PATH}")
-
+message(STATUS "Script: ${${UPPERCASE_PROJECT_NAME}_SCRIPT_PATH}")
 message(STATUS)
 
 if(EXISTS ${${UPPERCASE_PROJECT_NAME}_EXTERNAL_PATH}/CMakeLists.txt)
@@ -100,6 +101,13 @@ if(EXISTS ${${UPPERCASE_PROJECT_NAME}_TEST_PATH}/CMakeLists.txt)
   message(STATUS "Started Test Configuration")
   add_subdirectory(${${UPPERCASE_PROJECT_NAME}_TEST_PATH})
   message(STATUS "Finished Test Configuration")
+endif()
+
+if(EXISTS ${${UPPERCASE_PROJECT_NAME}_SCRIPT_PATH}/CMakeLists.txt)
+  message(STATUS)
+  message(STATUS "Started Script Configuration")
+  add_subdirectory(${${UPPERCASE_PROJECT_NAME}_SCRIPT_PATH})
+  message(STATUS "Finished Script Configuration")
 endif()
 
 message(STATUS)
