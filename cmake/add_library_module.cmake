@@ -8,7 +8,7 @@ function(add_library_module)
 
   add_library(${PROJECT_NAME} STATIC ${ARG_SOURCES})
 
-  set_common_target_properties(${PROJECT_NAME})
+  set_target_compile_properties(${PROJECT_NAME})
   add_target_dependencies(${PROJECT_NAME} DEPENDENCIES ${ARG_DEPENDENCIES})
 
   if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/test/CMakeLists.txt)
