@@ -12,7 +12,7 @@ function(set_package_directories PACKAGE_NAME MODULE_NAME)
 endfunction()
 
 function(configure_library LIBRARY MODULE_NAME)
-  add_library(${LIBRARY} STATIC IMPORTED)
+  add_library(${LIBRARY} STATIC IMPORTED GLOBAL)
 
   if(WIN32)
     set(LIBRARY_FILENAME "${LIBRARY}.lib")

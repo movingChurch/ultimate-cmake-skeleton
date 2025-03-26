@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION ${CMAKE_VERSION_MINIMUM})
 
 get_filename_component(MODULE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
+project(
+  ${MODULE_NAME}
+)
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
   set(MODULE_SOURCES src/msvc/print.cpp)
 else()
