@@ -1,0 +1,7 @@
+function(get_library_filename LIBRARY_NAME OUTPUT_FILENAME)
+  if(WIN32)
+    set(${OUTPUT_FILENAME} "${LIBRARY_NAME}.lib" PARENT_SCOPE)
+  else()
+    set(${OUTPUT_FILENAME} "lib${LIBRARY_NAME}.a" PARENT_SCOPE)
+  endif()
+endfunction()
