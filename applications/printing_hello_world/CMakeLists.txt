@@ -18,4 +18,4 @@ endif()
 
 target_compile_features(${PROJECT_NAME} PRIVATE ${COMPILER_FEATURES})
 target_compile_options(${PROJECT_NAME} PRIVATE ${COMPILER_FLAGS})
-target_link_libraries(${PROJECT_NAME} PRIVATE utils) # Change to the actual library name
+target_link_libraries(${PROJECT_NAME} PRIVATE ultimate_cmake_template__utils) # Change to the actual library name
