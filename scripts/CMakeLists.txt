@@ -8,9 +8,10 @@ foreach(SCRIPT_FILE ${SCRIPT_FILES})
     message(STATUS "Executing script: ${SCRIPT_NAME}")
 
     execute_process(
-      COMMAND chmod +x ${SCRIPT_NAME}
-      COMMAND sh ${SCRIPT_NAME}
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/executable
+      COMMAND chmod -R +rx ${CMAKE_CURRENT_SOURCE_DIR}/features
+      COMMAND chmod -R +rx ${CMAKE_CURRENT_SOURCE_DIR}/executable
+      COMMAND bash executable/${SCRIPT_NAME}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       RESULT_VARIABLE SCRIPT_RESULT
       OUTPUT_VARIABLE SCRIPT_OUTPUT
       ERROR_VARIABLE SCRIPT_ERROR
