@@ -5,6 +5,7 @@
 
 namespace ultimate_cmake_template::math {
 auto Add(int32_t lhs, int32_t rhs) -> int32_t;
+
 }  // namespace ultimate_cmake_template::math
 
 #endif  // ULTIMATE_CMAKE_TEMPLATE_MATH_ADD_HPP_
