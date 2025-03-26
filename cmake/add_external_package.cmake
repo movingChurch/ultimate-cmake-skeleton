@@ -1,26 +1,66 @@
 include(${CMAKE_SOURCE_DIR}/cmake/convert_to_screaming_case.cmake)
 
-function(set_package_directories PACKAGE_NAME MODULE_NAME)
-  set(${MODULE_NAME}_SOURCE_DIRECTORY ${CMAKE_SOURCE_DIR}/install/${PACKAGE_NAME}/source PARENT_SCOPE)
-  set(${MODULE_NAME}_BUILD_DIRECTORY ${CMAKE_SOURCE_DIR}/install/${PACKAGE_NAME}/build PARENT_SCOPE)
-  set(${MODULE_NAME}_INSTALL_DIRECTORY ${CMAKE_SOURCE_DIR}/install/${PACKAGE_NAME}/${CMAKE_BUILD_TYPE} PARENT_SCOPE)
+function(set_external_package_paths PACKAGE_NAME PACKAGE_IDENTIFIER)
+  set(${PACKAGE_IDENTIFIER}_SOURCE_PATH ${CMAKE_SOURCE_DIR}/install/${PACKAGE_NAME}/source PARENT_SCOPE)
+  set(${PACKAGE_IDENTIFIER}_BUILD_PATH ${CMAKE_SOURCE_DIR}/install/${PACKAGE_NAME}/build PARENT_SCOPE)
+  set(${PACKAGE_IDENTIFIER}_INSTALL_PATH ${CMAKE_SOURCE_DIR}/install/${PACKAGE_NAME}/${CMAKE_BUILD_TYPE} PARENT_SCOPE)
 endfunction()
 
-function(configure_library LIBRARY MODULE_NAME)
-  if(NOT TARGET ${LIBRARY})
-    add_library(${LIBRARY} STATIC IMPORTED GLOBAL)
+function(get_library_filename LIBRARY_NAME OUTPUT_FILENAME)
+  if(WIN32)
+    set(${OUTPUT_FILENAME} "${LIBRARY_NAME}.lib" PARENT_SCOPE)
+  else()
+    set(${OUTPUT_FILENAME} "lib${LIBRARY_NAME}.a" PARENT_SCOPE)
+  endif()
+endfunction()
 
-    if(WIN32)
-      set(LIBRARY_FILENAME "${LIBRARY}.lib")
-    else()
-      set(LIBRARY_FILENAME "lib${LIBRARY}.a")
-    endif()
+function(configure_static_library LIBRARY_NAME PACKAGE_IDENTIFIER)
+  if(NOT TARGET ${LIBRARY_NAME})
+    add_library(${LIBRARY_NAME} STATIC IMPORTED GLOBAL)
 
-    set_target_properties(${LIBRARY} PROPERTIES
-      IMPORTED_LOCATION "${${MODULE_NAME}_INSTALL_DIRECTORY}/lib/${LIBRARY_FILENAME}"
-      INTERFACE_INCLUDE_DIRECTORIES "${${MODULE_NAME}_INSTALL_DIRECTORY}/include"
+    get_library_filename(${LIBRARY_NAME} LIBRARY_FILENAME)
+
+    set_target_properties(${LIBRARY_NAME} PROPERTIES
+      IMPORTED_LOCATION "${${PACKAGE_IDENTIFIER}_INSTALL_PATH}/lib/${LIBRARY_FILENAME}"
+      INTERFACE_INCLUDE_DIRECTORIES "${${PACKAGE_IDENTIFIER}_INSTALL_PATH}/include"
     )
   endif()
+endfunction()
+
+function(check_libraries_exist PACKAGE_IDENTIFIER LIBRARIES RESULT_VAR)
+  set(ALL_EXIST TRUE)
+
+  foreach(LIBRARY_NAME ${LIBRARIES})
+    get_library_filename(${LIBRARY_NAME} LIBRARY_FILENAME)
+    set(LIBRARY_PATH "${${PACKAGE_IDENTIFIER}_INSTALL_PATH}/lib/${LIBRARY_FILENAME}")
+
+    if(NOT EXISTS ${LIBRARY_PATH})
+      set(ALL_EXIST FALSE)
+      break()
+    endif()
+  endforeach()
+
+  set(${RESULT_VAR} ${ALL_EXIST} PARENT_SCOPE)
+endfunction()
+
+function(install_external_package PACKAGE_NAME PACKAGE_IDENTIFIER)
+  message(STATUS "Installing ${PACKAGE_NAME}...")
+
+  execute_process(
+    COMMAND ${CMAKE_COMMAND}
+    -DCMAKE_INSTALL_PREFIX=${${PACKAGE_IDENTIFIER}_INSTALL_PATH}
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    ${PACKAGE_COMPILE_ARGUMENTS}
+    ${${PACKAGE_IDENTIFIER}_SOURCE_PATH}
+    WORKING_DIRECTORY ${${PACKAGE_IDENTIFIER}_BUILD_PATH}
+  )
+
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} --build . --target install
+    WORKING_DIRECTORY ${${PACKAGE_IDENTIFIER}_BUILD_PATH}
+  )
+
+  message(STATUS "Finished installing ${PACKAGE_NAME}")
 endfunction()
 
 function(add_external_package)
@@ -39,73 +79,48 @@ function(add_external_package)
 
   cmake_parse_arguments(PACKAGE "" "${one_value_arguments}" "${multi_value_arguments}" ${ARGN})
 
-  convert_to_screaming_case(${PACKAGE_NAME} MODULE_NAME)
-  set_package_directories(${PACKAGE_NAME} ${MODULE_NAME})
+  convert_to_screaming_case(${PACKAGE_NAME} PACKAGE_IDENTIFIER)
+  set_external_package_paths(${PACKAGE_NAME} ${PACKAGE_IDENTIFIER})
 
-  set(ALL_LIBS_EXIST TRUE)
+  check_libraries_exist(${PACKAGE_IDENTIFIER} "${PACKAGE_LIBRARIES}" LIBRARIES_EXIST)
 
-  foreach(LIBRARY ${PACKAGE_LIBRARIES})
-    if(WIN32)
-      set(LIB_FILE "${${MODULE_NAME}_INSTALL_DIRECTORY}/lib/${LIBRARY}.lib")
-    else()
-      set(LIB_FILE "${${MODULE_NAME}_INSTALL_DIRECTORY}/lib/lib${LIBRARY}.a")
-    endif()
-
-    if(NOT EXISTS ${LIB_FILE})
-      set(ALL_LIBS_EXIST FALSE)
-      break()
-    endif()
-  endforeach()
-
-  if(NOT ALL_LIBS_EXIST)
+  if(NOT LIBRARIES_EXIST)
     include(FetchContent)
 
     FetchContent_Declare(
-      ${MODULE_NAME}
+      ${PACKAGE_IDENTIFIER}
       GIT_REPOSITORY ${PACKAGE_REPOSITORY_URL}
       GIT_TAG ${PACKAGE_REPOSITORY_TAG}
       GIT_SHALLOW TRUE
-      SOURCE_DIR ${${MODULE_NAME}_SOURCE_DIRECTORY}
-      BINARY_DIR ${${MODULE_NAME}_BUILD_DIRECTORY}
+      SOURCE_DIR ${${PACKAGE_IDENTIFIER}_SOURCE_PATH}
+      BINARY_DIR ${${PACKAGE_IDENTIFIER}_BUILD_PATH}
     )
 
-    FetchContent_GetProperties(${MODULE_NAME})
+    FetchContent_GetProperties(${PACKAGE_IDENTIFIER})
 
-    if(NOT ${MODULE_NAME}_POPULATED)
-      message(STATUS "Installing ${PACKAGE_NAME}...")
-      FetchContent_Populate(${MODULE_NAME})
+    if(NOT ${PACKAGE_IDENTIFIER}_POPULATED)
+      FetchContent_Populate(${PACKAGE_IDENTIFIER})
 
-      set(CMAKE_INSTALL_PREFIX ${${MODULE_NAME}_INSTALL_DIRECTORY})
+      set(CMAKE_INSTALL_PREFIX ${${PACKAGE_IDENTIFIER}_INSTALL_PATH})
       add_subdirectory(
-        ${${MODULE_NAME}_SOURCE_DIRECTORY}
-        ${${MODULE_NAME}_BUILD_DIRECTORY}
+        ${${PACKAGE_IDENTIFIER}_SOURCE_PATH}
+        ${${PACKAGE_IDENTIFIER}_BUILD_PATH}
       )
 
       install(CODE "
         execute_process(
           COMMAND ${CMAKE_COMMAND} --build . --target install
-          WORKING_DIRECTORY ${${MODULE_NAME}_BUILD_DIRECTORY}
+          WORKING_DIRECTORY ${${PACKAGE_IDENTIFIER}_BUILD_PATH}
         )"
       )
 
-      execute_process(
-        COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=${${MODULE_NAME}_INSTALL_DIRECTORY}
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        ${PACKAGE_COMPILE_ARGUMENTS}
-        ${${MODULE_NAME}_SOURCE_DIRECTORY}
-        WORKING_DIRECTORY ${${MODULE_NAME}_BUILD_DIRECTORY}
-      )
-      execute_process(
-        COMMAND ${CMAKE_COMMAND} --build . --target install
-        WORKING_DIRECTORY ${${MODULE_NAME}_BUILD_DIRECTORY}
-      )
-      message(STATUS "Finished installing ${PACKAGE_NAME}")
+      install_external_package(${PACKAGE_NAME} ${PACKAGE_IDENTIFIER})
     endif()
   else()
     message(STATUS "Found existing installation for ${PACKAGE_NAME}, skipping build")
   endif()
 
-  foreach(LIBRARY ${PACKAGE_LIBRARIES})
-    configure_library(${LIBRARY} ${MODULE_NAME})
+  foreach(LIBRARY_NAME ${PACKAGE_LIBRARIES})
+    configure_static_library(${LIBRARY_NAME} ${PACKAGE_IDENTIFIER})
   endforeach()
 endfunction()
