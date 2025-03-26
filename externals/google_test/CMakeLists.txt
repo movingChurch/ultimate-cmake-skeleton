@@ -1,4 +1,3 @@
-include(${CMAKE_SOURCE_DIR}/cmake/add_external_package.cmake)
 add_external_package(
   VERSION 1.12.1
   DESCRIPTION "Google Test Framework"

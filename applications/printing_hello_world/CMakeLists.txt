@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION ${CMAKE_VERSION_MINIMUM})
 
-include(${CMAKE_SOURCE_DIR}/cmake/add_application_module.cmake)
-
 add_application_module(
   NAME printing_hello_world
   SOURCES main.cpp

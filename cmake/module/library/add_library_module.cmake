@@ -1,4 +1,6 @@
-include(${CMAKE_SOURCE_DIR}/cmake/common_module_utils.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/module/common/set_target_compile_properties.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/module/common/add_target_dependencies.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/module/common/get_module_project_name.cmake)
 
 function(add_library_module)
   cmake_parse_arguments(ARG "" "NAME" "SOURCES;DEPENDENCIES" ${ARGN})

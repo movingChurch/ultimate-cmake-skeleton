@@ -10,7 +10,7 @@ project(
   HOMEPAGE_URL "https://github.com/movingChurch/ultimate-cmake-skeleton"
 )
 
-include(${CMAKE_SOURCE_DIR}/cmake/string_utils.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/core/string/convert_to_uppercase_with_underscores.cmake)
 
 convert_to_uppercase_with_underscores(ultimate_cmake_template UPPERCASE_PROJECT_NAME)
 
