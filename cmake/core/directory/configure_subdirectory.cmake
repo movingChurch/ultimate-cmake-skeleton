@@ -1,0 +1,11 @@
+function(configure_subdirectory DIRECTORY_PATH DIRECTORY_NAME)
+  message(STATUS)
+  message(STATUS "Started ${DIRECTORY_PATH} ${DIRECTORY_NAME} Configuration")
+
+  if(EXISTS ${DIRECTORY_PATH}/CMakeLists.txt)
+    add_subdirectory(${DIRECTORY_PATH})
+    message(STATUS "Finished ${DIRECTORY_PATH} ${DIRECTORY_NAME} Configuration")
+  else()
+    message(STATUS "No ${DIRECTORY_PATH} ${DIRECTORY_NAME} Configuration")
+  endif()
+endfunction()
